@@ -29,11 +29,86 @@ entity control is
 end entity control;
 
 architecture behavioural of control is
-
+  type   state_t is (IDLE, FETCH, DECODE, PUSH_OPERAND, POP_A, POP_B, COMPUTE, PUSH_RESULT);  -- the name of the states
   -- Fill in type and signal declarations here.
+  signal current_state, next_state : state_t;  -- The current and the next step
 
+  function idle_transition(empty : std_logic) return state_t is
+  begin
+    if empty = '1' then
+      return IDLE;
+    else
+      return FETCH;
+    end if;
+  end idle_transition;
+
+  function decode_transition (instruction : instruction_t) return state_t is
+  begin
+    --change
+    if instruction(15 downto 8) = "00000000" then
+      return PUSH_OPERAND;
+    else
+      return POP_B;
+    end if;
+  end decode_transition;
+  
 begin  -- architecture behavioural
+  -- Fill in type and signal declarations here.
+  with current_state select
+    next_state <=
+    idle_transition(empty)         when IDLE,
+    DECODE                         when FETCH,
+    decode_transition(instruction) when DECODE,
+    POP_A                          when POP_B,
+    COMPUTE                        when POP_A,
+    PUSH_RESULT                    when COMPUTE,
+    IDLE                           when PUSH_RESULT;
 
   -- Fill in processes here.
+  process(next_state) is
+  begin
+    read  <= '0';
+    b_wen <= '0';
+    a_wen <= '0';
+    pop   <= '0';
+    push  <= '0';
+    case next_state is
+      when FETCH =>
+        read <= '1';
+      when PUSH_OPERAND =>
+        push      <= '1';
+        stack_src <= STACK_INPUT_OPERAND;
+      when POP_B =>
+        b_wen <= '1';
+        pop   <= '1';
+      when POP_A =>
+        a_wen <= '1';
+        pop   <= '1';
+      when COMPUTE =>
+        -- change with a case close on instruction
+        alu_sel <= ALU_ADD;
+      when PUSH_RESULT =>
+        stack_src <= STACK_INPUT_RESULT;
+        push      <= '1';
+      when others =>
+        null;
+    end case;
+  end process;
+
+
+  process(clk, rst) is
+    -- this process allow to go to a next state or reset the FSM
+  begin
+    if rst = '1' then
+      current_state <= IDLE;
+    elsif rising_edge(clk) then
+      current_state <= next_state;
+    end if;
+  end process;
+  
 
 end architecture behavioural;
+
+
+
+
