@@ -63,17 +63,17 @@ begin  -- architecture behavioural
     COMPUTE                        when POP_A,
     PUSH_RESULT                    when COMPUTE,
     IDLE                           when PUSH_RESULT,
-	 IDLE									  when PUSH_OPERAND;
+    IDLE                           when PUSH_OPERAND;
 
   -- Fill in processes here.
   process(current_state) is
   begin
-    read  <= '0';
-    b_wen <= '0';
-    a_wen <= '0';
-    pop   <= '0';
-    push  <= '0';
-	 operand <= instruction(7 downto 0);
+    read    <= '0';
+    b_wen   <= '0';
+    a_wen   <= '0';
+    pop     <= '0';
+    push    <= '0';
+    operand <= instruction(7 downto 0);
     case current_state is
       when FETCH =>
         read <= '1';
