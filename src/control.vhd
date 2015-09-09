@@ -88,7 +88,14 @@ begin  -- architecture behavioural
         pop   <= '1';
       when COMPUTE =>
         -- change with a case close on instruction
-        alu_sel <= ALU_ADD;
+		  case instruction(15 downto 8) is
+		  when "00000001" =>
+				alu_sel <= ALU_ADD;
+		  when "00000010" =>
+				alu_sel <= ALU_SUB;
+			when others =>
+				alu_sel <= ALU_ADD;
+			end case;
       when PUSH_RESULT =>
         stack_src <= STACK_INPUT_RESULT;
         push      <= '1';
